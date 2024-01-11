@@ -56,6 +56,7 @@ for i in range(0,R):
     S.append(list([ref[i],Dist.iloc[i,:].std()]))
 S_sorted = sorted(S, key = lambda x:x[1], reverse = True)
 S_sorted_list = [item[0] for item in S_sorted]
+# std가 제일 큰 하나만 가져오는게 아니라 모두 다 가져와야됨
 Dist_min_std = Dist.loc[S_sorted[0][0]]
 Dist_min_std_sort = Dist_min_std.sort_values()
 
@@ -74,6 +75,7 @@ while abandon == False:
                 abandon = False
         if reject == False:
             d = euclidean_distance(X[Dist_min_std_sort.index[j]],X[Dist_min_std_sort.index[j+offset]])
+# j+offset이 범위를 초과해서 문제가 생겼음
             d = d.numpy()
             if d < best_so_far:
                 best_so_far = d
