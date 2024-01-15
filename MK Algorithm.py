@@ -57,9 +57,6 @@ for i in range(0,R):
     S.append(list([ref[i],Dist.iloc[i,:].std()]))
 S_sorted = sorted(S, key = lambda x:x[1], reverse = True)
 S_sorted_list = [item[0] for item in S_sorted]
-# std가 제일 큰 하나만 가져오는게 아니라 모두 다 가져와야됨
-# Dist_min_std = Dist.loc[S_sorted[0][0]]
-# Dist_minhttps://www.semanticscholar.org/paper/Linking-microblogging-sentiments-to-stock-price-An-Steinert-Altmann/d6eedd8f08e929f7d11b6e20c31730d11f8f4297_std_sort = Dist_min_std.sort_values()
 
 offset = 0
 abandon = False
@@ -67,31 +64,28 @@ while abandon == False:
     offset = offset+1
     abandon = True
     for j in tqdm(range(len(X)-offset)):
-        reject = False
-        for i in range(len(ref)):
+        for i in (range(len(ref))):
             Dist_min = Dist.loc[S_sorted_list[i]]
             Dist_min_sort = Dist_min.sort_values()
             lower_bound = abs(Dist_min_sort[j] - Dist_min_sort[j+offset])
             if lower_bound > best_so_far:
-                reject = True
+                break
             elif i == 0:
-                abandon = False
-        if reject == False:
+                 abandon = False
             d = euclidean_distance(X[Dist_min_sort.index[j]],X[Dist_min_sort.index[j+offset]])
-# j+offset이 범위를 초과해서 문제가 생겼음
             d = d.numpy()
             if d < best_so_far:
                 best_so_far = d
                 L1 = Dist_min_sort.index[j]
                 L2 = Dist_min_sort.index[j+offset]
 
-print(L1,L2)
+print(ref,L1,L2)
 #%%
 plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
-plt.plot(close[0:50])
+plt.plot(close[50:100])
 plt.plot(close[L1:L1+seq_len],color = 'red')
 plt.plot(close[L2:L2+seq_len],color = 'red')
 
