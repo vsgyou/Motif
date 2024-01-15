@@ -30,7 +30,7 @@ def euclidean_distance(a,b):
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2013-01-01'
+start_date = '2023-01-01'
 end_date = '2023-07-31'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
@@ -59,7 +59,7 @@ S_sorted = sorted(S, key = lambda x:x[1], reverse = True)
 S_sorted_list = [item[0] for item in S_sorted]
 # std가 제일 큰 하나만 가져오는게 아니라 모두 다 가져와야됨
 # Dist_min_std = Dist.loc[S_sorted[0][0]]
-# Dist_min_std_sort = Dist_min_std.sort_values()
+# Dist_minhttps://www.semanticscholar.org/paper/Linking-microblogging-sentiments-to-stock-price-An-Steinert-Altmann/d6eedd8f08e929f7d11b6e20c31730d11f8f4297_std_sort = Dist_min_std.sort_values()
 
 offset = 0
 abandon = False
@@ -91,7 +91,7 @@ plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
-plt.plot(close[780:880])
+plt.plot(close[0:50])
 plt.plot(close[L1:L1+seq_len],color = 'red')
 plt.plot(close[L2:L2+seq_len],color = 'red')
 
