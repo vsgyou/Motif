@@ -12,7 +12,7 @@ from tqdm import tqdm
 def window(data, seq_len, stride = 1):
     L = data.shape[0]
     data_tensor = torch.tensor(data)
-    data_tensor = data_tensor.view(-1,1)    
+    data_tensor = data_tensor.view(-1,1)
     num_samples = (L - seq_len) // stride + 1
     X = torch.zeros(num_samples,seq_len,1)
 
@@ -34,7 +34,7 @@ start_date = '2023-01-01'
 end_date = '2023-07-31'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
-seq_len = 7
+seq_len = 31
 X = window(data = close, seq_len = seq_len)
 
 # %%
@@ -67,7 +67,7 @@ while abandon == False:
         for i in (range(len(ref))):
             Dist_min = Dist.loc[S_sorted_list[i]]
             Dist_min_sort = Dist_min.sort_values()
-            lower_bound = abs(Dist_min_sort[j] - Dist_min_sort[j+offset])
+            lower_bound = abs(Dist_min_sort.iloc[j] - Dist_min_sort.iloc[j+offset])
             if lower_bound > best_so_far:
                 break
             elif i == 0:
@@ -78,14 +78,14 @@ while abandon == False:
                 best_so_far = d
                 L1 = Dist_min_sort.index[j]
                 L2 = Dist_min_sort.index[j+offset]
-
+                print(j,j+offset)
 print(ref,L1,L2)
 #%%
 plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
-plt.plot(close[50:100])
+plt.plot(close[0:50])
 plt.plot(close[L1:L1+seq_len],color = 'red')
 plt.plot(close[L2:L2+seq_len],color = 'red')
 
