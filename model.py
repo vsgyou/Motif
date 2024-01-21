@@ -30,3 +30,12 @@ def minmax(data):
         data[i] = (data[i] - data[i].min()) / (data[i].max() - data[i].min())
     return data
 # %%
+def MA(data,p):
+    data = data.reset_index(drop = True)
+    result = data.copy()
+    result = data.rolling(window = p).mean()
+    for i in range(p-1):
+        result[i] = data[:i+1].mean()
+    return result
+
+# %%

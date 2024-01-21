@@ -13,12 +13,15 @@ from model import *
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2022-01-01'
+start_date = '2023-01-01'
 end_date = '2023-07-31'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
+close_MA = MA(close,5)
 seq_len = 7
-X = window(data = close, seq_len = seq_len)
+X = window(data = close_MA, seq_len = seq_len)
+X = minmax(X)
+# X = minmax(X)
 # %%
 best_so_far = np.inf
 R = 5
@@ -49,31 +52,30 @@ while abandon == False:
         for i in (range(len(ref))):
             Dist_min = Dist.loc[S_sorted_list[i]]
             Dist_min_sort = Dist_min.sort_values()
-            lower_bound = abs(Dist_min_sort.iloc[j] - Dist_min_sort.iloc[j+offset])
-            if lower_bound > best_so_far:
-                break
-            elif i == 0:
-                 abandon = False
-            d = euclidean_distance(X[Dist_min_sort.index[j]],X[Dist_min_sort.index[j+offset]])
-            d = d.numpy()
-            if d < best_so_far:
-                best_so_far = d
-                L1 = Dist_min_sort.index[j]
-                L2 = Dist_min_sort.index[j+offset]
-                print(j,j+offset)
+            if abs(Dist_min_sort.index[j] - Dist_min_sort.index[j+offset]) > int(seq_len/2):
+                lower_bound = abs(Dist_min_sort.iloc[j] - Dist_min_sort.iloc[j+offset])
+                if lower_bound > best_so_far:
+                    break
+                elif i == 0:
+                    abandon = False
+                d = euclidean_distance(X[Dist_min_sort.index[j]],X[Dist_min_sort.index[j+offset]])
+                d = d.numpy()
+                if d < best_so_far:
+                    best_so_far = d
+                    L1 = Dist_min_sort.index[j]
+                    L2 = Dist_min_sort.index[j+offset]
+                    print(j,j+offset,L1,L2)
+Dist_min_sort.index[14]
 print(ref,L1,L2)
+
 #%%
 plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
-plt.plot(close[0:110])
-plt.plot(close[L1:L1+seq_len],color = 'red')
-plt.plot(close[L2:L2+seq_len],color = 'red')
 
-<<<<<<< Updated upstream
-plt.plot(close[0:50])
-plt.plot(close[L1:L1+seq_len],color = 'red')
-plt.plot(close[L2:L2+seq_len],color = 'red')
+plt.plot(close_MA[0:150])
+plt.plot(close_MA[L1:L1+seq_len],color = 'blue')
+plt.plot(close_MA[L2:L2+seq_len],color = 'red')
 
 
 # %%
