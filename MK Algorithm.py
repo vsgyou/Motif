@@ -30,7 +30,7 @@ def euclidean_distance(a,b):
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2023-01-01'
+start_date = '2022-01-01'
 end_date = '2023-07-31'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
@@ -85,7 +85,11 @@ plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
+<<<<<<< Updated upstream
 plt.plot(close[0:50])
+=======
+plt.plot(close[300:350])
+>>>>>>> Stashed changes
 plt.plot(close[L1:L1+seq_len],color = 'red')
 plt.plot(close[L2:L2+seq_len],color = 'red')
 
