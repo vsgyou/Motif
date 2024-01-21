@@ -9,24 +9,7 @@ import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 #%%
-def window(data, seq_len, stride = 1):
-    L = data.shape[0]
-    data_tensor = torch.tensor(data)
-    data_tensor = data_tensor.view(-1,1)
-    num_samples = (L - seq_len) // stride + 1
-    X = torch.zeros(num_samples,seq_len,1)
-
-    for i in range(num_samples):
-        X[i,:] = data_tensor[i*stride : i*stride+seq_len]
-    return X
-#%%
-def euclidean_distance(a,b):
-    diff = a-b
-    squared_diff = diff ** 2
-    sum_squared_diff = sum(squared_diff)
-    distance = torch.sqrt(sum_squared_diff)
-    return distance
-
+from model import *
 #%%
 # Data
 stock_code = '005930.KS'
@@ -36,7 +19,7 @@ samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 seq_len = 7
 X = window(data = close, seq_len = seq_len)
-
+X = minmax(X)
 # %%
 best_so_far = np.inf
 R = 5
@@ -88,7 +71,7 @@ plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
-plt.plot(close[170:200])
+plt.plot(close[100:210])
 plt.plot(close[L1:L1+seq_len],color = 'blue')
 plt.plot(close[L2:L2+seq_len],color = 'red')
 
