@@ -8,12 +8,13 @@ import yfinance as yf
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from sklearn.neighbors import KNeighborsClassifier
 #%%
 from model import *
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2023-01-01'
+start_date = '2013-01-01'
 end_date = '2023-07-31'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
@@ -31,8 +32,20 @@ dist_df = pd.DataFrame(dist.numpy(),columns = ['Value'])
 motiflet = []
 d = np.inf
 # %%
-k = 10
+k = 3
 for i in range(X.shape[0]):
     idx = dist_df.index[dist_df['Value']<d]
+
     if len(idx) >= k:
-        candidate =  
+        sort_dist_df = dist_df.sort_values(by = 'Value')
+        top_k = sort_dist_df[:k]
+        candidate = top_k.index
+        
+
+plt.plot(close)
+plt.plot(target,label = 'true',color = 'red')
+for i in range(k):
+    plt.plot(X[candidate[i]], color = 'pink')
+
+
+# %%
