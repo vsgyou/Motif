@@ -9,12 +9,12 @@ import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 #%%
-from model import *
+from preprocess import *
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2023-01-01'
-end_date = '2023-07-31'
+start_date = '2021-07-20'
+end_date = '2023-07-20'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 close_MA = MA(close,5)

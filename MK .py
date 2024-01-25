@@ -9,7 +9,7 @@ import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 #%%
-from model import *
+from preprocess import *
 #%%
 # Data
 stock_code = '005930.KS'
