@@ -13,7 +13,7 @@ from preprocess import *
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2020-07-31'
+start_date = '2022-07-31'
 end_date = '2023-07-31'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
@@ -71,8 +71,10 @@ plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
-plt.plot(close[0:600])
-plt.plot(close[L1:L1+seq_len],color = 'blue')
+plt.plot(close[0:100])
+plt.plot(close[L1:L1+seq_len],color = 'red')
+
+plt.plot(close[520-53:620-53])
 plt.plot(close[L2:L2+seq_len],color = 'red')
 
 

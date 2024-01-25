@@ -61,11 +61,9 @@ def normal(data):
     return para, data
 
 def minmax(data):
-    bound = []
     for i in range(data.shape[0]):
-        bound.append([data[i].max(),data[i].min()])
         data[i] = (data[i] - data[i].min()) / (data[i].max() - data[i].min())
-    return bound, data
+    return data
 
 def pred_minmax(data):
     bound = []

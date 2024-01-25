@@ -17,7 +17,7 @@ start_date = '2021-07-20'
 end_date = '2023-07-20'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
-close_MA = MA(close,5)
+close_MA = MA(close,10)
 seq_len = 7
 X = window(data = close_MA, seq_len = seq_len)
 X = minmax(X)
@@ -73,9 +73,16 @@ plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
-plt.plot(close_MA[0:150])
-plt.plot(close_MA[L1:L1+seq_len],color = 'blue')
+plt.plot(close_MA[0:500])
+plt.plot(close_MA[L1:L1+seq_len],color = 'ed')
 plt.plot(close_MA[L2:L2+seq_len],color = 'red')
+#%%
+plt.plot(X[L1])
+plt.plot(X[L2])
 
+
+plt.plot(close[0:500])
+plt.plot(close[L1:L1+seq_len],color = 'red')
+plt.plot(close[L2:L2+seq_len],color = 'red')
 
 # %%
