@@ -55,63 +55,94 @@ num_samples = train_set.x.shape[0]
 train_set_org = copy.deepcopy(train_set)
 bound,train_trans = pred_minmax(train_set)   # sequence별 max,min저장
 k = 3
+
 x_pattern = torch.zeros([train_trans.x.shape[0],train_trans.x.shape[1],k])
 x_pattern_noscale = torch.zeros([train_set_org.x.shape[0],train_set_org.x.shape[1],k]) 
 bound_list = torch.zeros([train_trans.x.shape[0],k+1,2])
+
 for i in range(num_samples):
+
     dist = pd.DataFrame(data = torch.sum(torch.sqrt((train_trans.x[i] - train_trans.x)**2), 
     dim = (1,2)), columns = ['Values'])
     dist_sort = dist.sort_values(by = 'Values')
     ind = dist_sort.index[1:k+1].tolist()
+
     x_pattern[i,:] = torch.cat([train_trans.x[j] for j in ind],dim = 1)   #[num_sample, seq_len, k]
     x_pattern_noscale[i,:] = torch.cat([train_set_org.x[j] for j in ind], dim=1)
-    bound_list[i,:] = torch.cat((torch.FloatTensor(bound[i]).unsqueeze(0),torch.FloatTensor([bound[j] for j in ind])),dim=0)    # [num_sample, k+1, 2] 기존,패턴의 min,max 저장
+    bound_list[i,:] = torch.cat((torch.FloatTensor(bound[i]).unsqueeze(0),
+                                 torch.FloatTensor([bound[j] for j in ind])),
+                                 dim=0)    # [num_sample, k+1, 2] 기존,패턴의 min,max 저장
 torch.FloatTensor(bound)
-
+#%%
 train_set_org.x = torch.cat([train_set_org.x,x_pattern_noscale],dim = 2)    # minmax 안된 x
 # scaling을 거치고 찾은 패턴을 찾아 변환되기 전의 값으로 합침
+# train_set_org scaling
+train_set_org.x = train_set_org.x - 50000
+train_set_org.y = train_set_org.y - 50000
+
+
+
+
+
+
+
+
+#%%
 
 train_trans.x = torch.cat([train_trans.x, x_pattern], dim = 2)
 
+
+
+
+
 #%%
 # 데이터 로더
-train_loader = DataLoader(train_set_org, batch_size = 64, shuffle = False, drop_last = True)
+train_loader = DataLoader(train_trans, batch_size = 64, shuffle = False, drop_last = True)
 loader = DataLoader(train_trans, batch_size = 1, shuffle = False, drop_last = True)
 #%%
-for data,label in train_loader:
-    data = data
-    label = label
+def train(model, data_loader, optimizer, criterion):
+    model.train()
+    h0 = torch.zeros(1,64,8)
+    total_loss = []
+    for input,label in data_loader:
+        
+        input = input
+        label = label
 
+        optimizer.zero_grad()
 
-rnn = nn.RNN(input_size = 4, hidden_size = 8, num_layers = 1, batch_first = True)
-h0 = torch.zeros(1,data.shape[0],8)
-fc1 = nn.Linear(in_features = 56, out_features =32)
-fc2 = nn.Linear(in_features = 32, out_features = 1)
-relu = nn.ReLU()
+        pred = model(input, h0)
+        loss = criterion(pred, label)
 
-x, hn = rnn(data,h0)
-x = torch.reshape(x, (x.shape[0],-1))
-x.shape
-x = fc1(x)
-x = relu(x)
-x = fc2(x)
-x = torch.flatten(x)
-x.shape
+        loss.backward()
+        optimizer.step()
 
+        total_loss.append(loss)
+    return sum(total_loss)/len(total_loss), pred
+#%%
+# 모델 학습
+model = RNN(input_size = 4, hidden_size = 8, num_layers = 1)
+optimizer = optim.Adam(model.parameters(), lr = 0.001)
+criterion = nn.MSELoss()
 
+train(model, data_loader = train_loader, optimizer = optimizer, criterion=criterion)
 
-
-
-
-
+for epoch in range(200):
+    train_loss,pred = train(model,train_loader, optimizer, criterion)
+    if epoch % 10 == 0:
+        print(f'epoch:{epoch}, train_loss:{train_loss.item():5f}')
 
 
 
 
 #%%
-# 모델 학습
-model = RNN()
-optim = Adam(params = model.parameters(), lr = 0.0001)
+
+
+
+
+
+
+
 for epoch in range(200):
     iterator = tqdm(loader)
     for data,label in train_loader:
