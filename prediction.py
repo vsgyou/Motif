@@ -127,7 +127,6 @@ test_set_org.x = torch.cat([test_set_org.x, valid_pattern], dim =2)
 
 
 
-hee mang undong 2
 
 #%%
 # 데이터 로더
