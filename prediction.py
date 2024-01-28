@@ -112,21 +112,21 @@ for i in range(test_num_samples):
 
 
 #%%
-# 원래 sequence와 label은 기존 값, 패턴만 스케일링
-train_set_org.x = torch.cat([train_set_org.x, train_pattern], dim = 2)
-valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern], dim = 2)
-test_set_org.x = torch.cat([test_set_org.x, valid_pattern], dim =2)
+# # 원래 sequence와 label은 기존 값, 패턴만 스케일링
+# train_set_org.x = torch.cat([train_set_org.x, train_pattern], dim = 2)
+# valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern], dim = 2)
+# test_set_org.x = torch.cat([test_set_org.x, valid_pattern], dim =2)
 #%%
 # 원래 sequence와 패턴 모두 스케일링 x
-# train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
-# train_set_org.x = train_set_org.x / 5000
-# train_set_org.y = train_set_org.y / 5000
-# valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern_noscale], dim = 2)
-# valid_set_org.x = valid_set_org.x / 5000
-# valid_set_org.y = valid_set_org.y / 5000
-# test_set_org.x = torch.cat([test_set_org.x, valid_pattern_noscale], dim =2)
-# test_set_org.x = test_set_org.x / 5000
-# test_set_org.y = test_set_org.y / 5000
+train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
+train_set_org.x = train_set_org.x / 5000
+train_set_org.y = train_set_org.y / 5000
+valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern_noscale], dim = 2)
+valid_set_org.x = valid_set_org.x / 5000
+valid_set_org.y = valid_set_org.y / 5000
+test_set_org.x = torch.cat([test_set_org.x, valid_pattern_noscale], dim =2)
+test_set_org.x = test_set_org.x / 5000
+test_set_org.y = test_set_org.y / 5000
 
 #%%
 #train_set_org.x = torch.cat([train_set_org.x,train_pattern_noscale],dim = 2)    # minmax 안된 x
@@ -195,12 +195,7 @@ def eval(model, data_loader):
 #%%
 # 모델 학습
 #model = RNN(input_size = 4, hidden_size = 8, num_layers = 1)
-for input, label in train_loader:
-    input = input
-    label = label
-    
-
-model = LSTM(input_size = 6, hidden_size = 64, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 8, hidden_size = 32, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
@@ -225,17 +220,19 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 #%%
-model = LSTM(input_size = 6, hidden_size = 64, output_size = 1, num_layers = 1)
+model = LSTM(input_size = 8, hidden_size = 32, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
 predictions = eval(model, test_loader)
 
 
 
-value = [tensor.item() * 5000 for tensor in predictions]
+value = [tensor.item() for tensor in predictions]
 value
-plt.plot(value,color = 'red', label = 'predictions')
-plt.plot(test_set_org.y * 5000, label = 'true')
+plt.plot(value,color = 'red')
+plt.title('Prediction')
+plt.plot(test_set_org.y)
+plt.title('true')
 plt.legend()
 #%%
 
