@@ -25,9 +25,9 @@ end_date = '2023-07-31'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 seq_len = 7    
-k = 3
+k = 7
 
-epochs = 2000
+epochs = 200
 early_stopping_count = 0
 early_stopping = 15
 best_valid_loss = float('inf')
@@ -111,11 +111,22 @@ for i in range(test_num_samples):
                                        dim = 0)
 
 
-
+#%%
+# 원래 sequence와 label은 기존 값, 패턴만 스케일링
 train_set_org.x = torch.cat([train_set_org.x, train_pattern], dim = 2)
 valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern], dim = 2)
 test_set_org.x = torch.cat([test_set_org.x, valid_pattern], dim =2)
-#train_trans.x = torch.cat([train_trans.x, x_pattern],dim = 2)
+#%%
+# 원래 sequence와 패턴 모두 스케일링 x
+# train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
+# train_set_org.x = train_set_org.x / 5000
+# train_set_org.y = train_set_org.y / 5000
+# valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern_noscale], dim = 2)
+# valid_set_org.x = valid_set_org.x / 5000
+# valid_set_org.y = valid_set_org.y / 5000
+# test_set_org.x = torch.cat([test_set_org.x, valid_pattern_noscale], dim =2)
+# test_set_org.x = test_set_org.x / 5000
+# test_set_org.y = test_set_org.y / 5000
 
 #%%
 #train_set_org.x = torch.cat([train_set_org.x,train_pattern_noscale],dim = 2)    # minmax 안된 x
@@ -123,10 +134,6 @@ test_set_org.x = torch.cat([test_set_org.x, valid_pattern], dim =2)
 # train_set_org scaling
 
 #train_trans.x = torch.cat([train_trans.x, train_pattern], dim = 2)
-
-
-
-
 
 #%%
 # 데이터 로더
@@ -137,7 +144,6 @@ test_loader = DataLoader(test_set_org, batch_size = 1, shuffle = False)
 def train(model, data_loader, optimizer, criterion):
     
     model.train()
-    h0 = torch.zeros(1,64,8)
     total_loss = []
 
     for input,label in data_loader:
@@ -147,7 +153,7 @@ def train(model, data_loader, optimizer, criterion):
 
         optimizer.zero_grad()
 
-        pred = model(input, h0)
+        pred = model(input)
         loss = criterion(pred, label)
 
         loss.backward()
@@ -159,7 +165,6 @@ def train(model, data_loader, optimizer, criterion):
 def valid(model, data_loader, criterion):
     
     model.eval()
-    h0 = torch.zeros(1,1,8)
     total_loss = []
     
     with torch.no_grad():
@@ -168,7 +173,7 @@ def valid(model, data_loader, criterion):
             input = input
             label = label
 
-            pred = model(input, h0)
+            pred = model(input)
             loss = criterion(pred, label)
             total_loss.append(loss)
         return sum(total_loss) / len(total_loss)
@@ -176,22 +181,26 @@ def valid(model, data_loader, criterion):
 def eval(model, data_loader):
     
     model.eval()
-    h0 = torch.zeros(1,1,8)
     predictions = []
-    total_loss = []
-
+    
     with torch.no_grad():
         for input, label in data_loader:
 
             input = input
             label = label
 
-            pred = model(input, h0)
+            pred = model(input)
             predictions.append(pred)
         return predictions
 #%%
 # 모델 학습
-model = RNN(input_size = 4, hidden_size = 8, num_layers = 1)
+#model = RNN(input_size = 4, hidden_size = 8, num_layers = 1)
+for input, label in train_loader:
+    input = input
+    label = label
+    
+
+model = LSTM(input_size = 6, hidden_size = 64, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
@@ -216,45 +225,20 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 #%%
-model = RNN(input_size = 4, hidden_size = 8, num_layers = 1)
+model = LSTM(input_size = 6, hidden_size = 64, output_size = 1, num_layers = 1)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
 predictions = eval(model, test_loader)
 
 
 
-
+value = [tensor.item() * 5000 for tensor in predictions]
+value
+plt.plot(value,color = 'red', label = 'predictions')
+plt.plot(test_set_org.y * 5000, label = 'true')
+plt.legend()
 #%%
 
-
-
-
-
-
-
-# for epoch in range(200):
-#     iterator = tqdm(loader)
-#     for data,label in train_loader:
-#         optim.zero_grad()
-
-#         h0 = torch.zeros(1, data.shape[0], 8)
-#         pred = model(data, h0)
-#         loss = nn.MSELoss()(pred, label)
-#         optim.step()
-#         iterator.set_description(f"epoch{epoch} loss:{loss.item()}")
-# torch.save(model.state_dict(), "./rnn.pth")
-
-# 모델 성능평가
-preds = []
-total_loss = 0
-with torch.no_grad():
-    model.load_state_dict(torch.load("rnn.pth"))
-    for data, label in loader:
-        h0 = torch.zeros(1, data.shape[0], 8)
-        pred = model(data, h0)
-        preds.append(pred.item())
-        loss = nn.MSELoss()(pred,label)
-        total_loss += loss / len(loader)
 
 
 

@@ -14,13 +14,14 @@ class RNN(nn.Module):
 
         self.rnn = nn.RNN(input_size = input_size,
                            hidden_size = hidden_size, num_layers = num_layers, batch_first = True)
-        self.fc1 = nn.Linear(in_features = 56,
-                              out_features = 32)
-        self.fc2 = nn.Linear(in_features = 32,
+        self.fc1 = nn.Linear(in_features = 8,
+                              out_features = 64)
+        self.fc2 = nn.Linear(in_features = 64,
                               out_features = 1)
         self.relu = nn.ReLU()
     def forward(self, x, h0):
         x, hn = self.rnn(x, h0)
+        x = x[:,-1,:]
         x = torch.reshape(x,(x.shape[0],-1))
         x = self.fc1(x)
         x = self.relu(x)
