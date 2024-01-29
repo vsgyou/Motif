@@ -57,7 +57,6 @@ def train(model, data_loader, optimizer, criterion):
         
         input = input
         label = label
-
         optimizer.zero_grad()
 
         pred = model(input)
@@ -73,30 +72,55 @@ def valid(model, data_loader, criterion):
     
     model.eval()
     total_loss = []
-    
+    predictions = []
+    labels = []
     with torch.no_grad():
         for input, label in data_loader:
 
             input = input
             label = label
+            labels.append(label)
 
             pred = model(input)
+            predictions.append(pred)
             loss = criterion(pred, label)
             total_loss.append(loss)
-        return sum(total_loss) / len(total_loss)
+        return sum(total_loss) / len(total_loss), predictions, labels
 
 def eval(model, data_loader):
     
     model.eval()
     predictions = []
-    
+    labels = []
     with torch.no_grad():
         for input, label in data_loader:
 
             input = input
             label = label
-
+            labels.append(label)
             pred = model(input)
             predictions.append(pred)
-        return predictions
+        return predictions, labels
 #%%
+def calculate_accuracy(pred_labels, true_labels):
+    # 예측과 실제 레이블의 길이가 같은지 확인
+    if len(pred_labels) != len(true_labels):
+        raise ValueError("두 리스트의 길이가 일치하지 않습니다.")
+
+    pred_labels = [1 if (pred_labels[i+1] - pred_labels[i]).item() > 0 else 0 for i in range(len(pred_labels)-1)]
+    true_labels = [1 if (true_labels[i+1] - true_labels[i]).item() > 0 else 0 for i in range(len(true_labels)-1)]
+
+    # 맞춘 예측의 개수 계산
+    correct_predictions = sum(1 for pred, true in zip(pred_labels, true_labels) if pred == true)
+
+    # 전체 예측 개수 계산
+    total_predictions = len(pred_labels)
+
+    # 정확도 계산
+    accuracy = correct_predictions / total_predictions
+
+    return accuracy
+
+# 예시로 정확도 측정
+
+# %%

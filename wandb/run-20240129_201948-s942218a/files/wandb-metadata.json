@@ -1,0 +1,53 @@
+{
+    "os": "Windows-10-10.0.19045-SP0",
+    "python": "3.11.2",
+    "heartbeatAt": "2024-01-29T11:19:50.097869",
+    "startedAt": "2024-01-29T11:19:48.807401",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "c:\\Users\\USER\\Documents\\GitHub\\Motif\\prediction.py",
+    "codePathLocal": "prediction.py",
+    "codePath": "prediction.py",
+    "git": {
+        "remote": "https://github.com/vsgyou/Motif.git",
+        "commit": "18bda9416f3b6813d2c8b9fe70616bfd40506b9a"
+    },
+    "email": "vsgyou@naver.com",
+    "root": "C:/Users/USER/Documents/GitHub/Motif",
+    "host": "DESKTOP-B20376H",
+    "username": "USER",
+    "executable": "c:\\Users\\USER\\anaconda3\\envs\\torch\\python.exe",
+    "cpu_count": 4,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 1792.0,
+        "min": 0.0,
+        "max": 1992.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 1792.0,
+            "min": 0.0,
+            "max": 1992.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 232.4289093017578,
+            "used": 193.13155364990234
+        }
+    },
+    "gpu": "GeForce GTX 1050",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "GeForce GTX 1050",
+            "memory_total": 4294967296
+        }
+    ],
+    "memory": {
+        "total": 7.911350250244141
+    }
+}

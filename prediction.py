@@ -8,18 +8,32 @@ import torch.nn as nn
 import yfinance as yf
 import random
 import copy
+import wandb
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torch.optim.adam import Adam
 #%%
 from preprocess import *
 from model import *
+#%%
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="All MinMax scailing",
+    
+    # track hyperparameters and run metadata
+    config={
+    "learning_rate": 0.001,
+    "architecture": "LSTM",
+    "dataset": "samsung (2020-07-30~2023-07-30)",
+    "epochs": 200,
+    }
+)
 
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2020-01-29'
-end_date = '2024-01-30'
+start_date = '2020-07-30'
+end_date = '2023-07-30'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 seq_len = 7    
@@ -115,15 +129,15 @@ valid_set.x = torch.cat([valid_set.x, valid_pattern], dim = 2)
 test_set.x = torch.cat([test_set.x, test_pattern], dim =2)
 #%%
 # 원래 sequence와 패턴 모두 스케일링 x
-train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
-train_set_org.x = train_set_org.x / 5000
-train_set_org.y = train_set_org.y / 5000
-valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern_noscale], dim = 2)
-valid_set_org.x = valid_set_org.x / 5000
-valid_set_org.y = valid_set_org.y / 5000
-test_set_org.x = torch.cat([test_set_org.x, test_pattern_noscale], dim =2)
-test_set_org.x = test_set_org.x / 5000
-test_set_org.y = test_set_org.y / 5000
+# train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
+# train_set_org.x = train_set_org.x / 5000
+# train_set_org.y = train_set_org.y / 5000
+# valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern_noscale], dim = 2)
+# valid_set_org.x = valid_set_org.x / 5000
+# valid_set_org.y = valid_set_org.y / 5000
+# test_set_org.x = torch.cat([test_set_org.x, test_pattern_noscale], dim =2)
+# test_set_org.x = test_set_org.x / 5000
+# test_set_org.y = test_set_org.y / 5000
 
 #%%
 #train_set_org.x = torch.cat([train_set_org.x,train_pattern_noscale],dim = 2)    # minmax 안된 x
@@ -137,14 +151,14 @@ test_set_org.y = test_set_org.y / 5000
 train_loader = DataLoader(train_set, batch_size = 64, shuffle = False, drop_last = True)
 valid_loader = DataLoader(valid_set, batch_size = 1, shuffle = False)
 test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
+# #%%
+# test_set.x = test_pattern
+# train_set.x = train_pattern
+# valid_set.x = valid_pattern
 
-test_set.x = test_pattern
-train_set.x = train_pattern
-valid_set.x = valid_pattern
-
-train_loader = DataLoader(train_set_org, batch_size = 64, shuffle = False, drop_last = True)
-valid_loader = DataLoader(valid_set_org, batch_size = 1, shuffle = False)
-test_loader = DataLoader(test_set_org, batch_size = 1, shuffle = False)
+# train_loader = DataLoader(train_set_org, batch_size = 64, shuffle = False, drop_last = True)
+# valid_loader = DataLoader(valid_set_org, batch_size = 1, shuffle = False)
+# test_loader = DataLoader(test_set_org, batch_size = 1, shuffle = False)
 
 #%%
 
@@ -155,8 +169,14 @@ optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
     for epoch in tr:
-        train_loss= train(model,train_loader, optimizer, criterion)
-        valid_loss = valid(model, valid_loader, criterion)
+
+        train_loss = train(model,train_loader, optimizer, criterion)
+        valid_loss, valid_pred, valid_label = valid(model, valid_loader, criterion)
+        valid_accuracy = calculate_accuracy(valid_pred, valid_label)
+
+        wandb.log({"train_loss":train_loss,
+                   "valid_acc":valid_accuracy, 
+                   "valid_loss":valid_loss})
 
         if epoch % 10 == 0:
             print(f'epoch:{epoch}, train_loss:{train_loss.item():5f}')
@@ -178,10 +198,9 @@ with tqdm(range(1, epochs+1)) as tr:
 model = LSTM(input_size = 6, hidden_size = 32, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
-predictions = eval(model, test_loader)
+predictions,true_labels = eval(model, test_loader)
 
 value = [tensor.item() for tensor in predictions]
-value
 plt.plot(value,color = 'red')
 plt.title('Prediction')
 plt.plot(test_set.y)
@@ -189,32 +208,7 @@ plt.title('true')
 plt.legend()
 #%%
 # 정확도 계산
-pred_labels = [1 if (predictions[i+1] - predictions[i]).item() > 0 else 0 for i in range(len(predictions)-1)]
-true_labels = [1 if (test_set.y[i+1] - test_set.y[i]).item() > 0 else 0 for i in range(len(test_set.y)-1)]
-
-
-def calculate_accuracy(pred_labels, true_labels):
-    # 예측과 실제 레이블의 길이가 같은지 확인
-    if len(pred_labels) != len(true_labels):
-        raise ValueError("두 리스트의 길이가 일치하지 않습니다.")
-
-    # 맞춘 예측의 개수 계산
-    correct_predictions = sum(1 for pred, true in zip(pred_labels, true_labels) if pred == true)
-
-    # 전체 예측 개수 계산
-    total_predictions = len(pred_labels)
-
-    # 정확도 계산
-    accuracy = correct_predictions / total_predictions
-
-    return accuracy
-
-# 예시로 정확도 측정
-accuracy = calculate_accuracy(pred_labels, true_labels)
-print(f"정확도: {accuracy * 100:.2f}%")
-
-
-
+calculate_accuracy(predictions, true_labels)
 
 
 
