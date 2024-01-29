@@ -48,7 +48,6 @@ class LSTM(nn.Module):
 
         return result
 # %%
-#%%
 def train(model, data_loader, optimizer, criterion):
     
     model.train()
@@ -100,4 +99,4 @@ def eval(model, data_loader):
             pred = model(input)
             predictions.append(pred)
         return predictions
-# %%
+#%%
