@@ -140,62 +140,11 @@ test_set_org.y = test_set_org.y / 5000
 train_loader = DataLoader(train_set_org, batch_size = 64, shuffle = False, drop_last = True)
 valid_loader = DataLoader(valid_set_org, batch_size = 1, shuffle = False)
 test_loader = DataLoader(test_set_org, batch_size = 1, shuffle = False)
-#%%
-def train(model, data_loader, optimizer, criterion):
-    
-    model.train()
-    total_loss = []
 
-    for input,label in data_loader:
-        
-        input = input
-        label = label
-
-        optimizer.zero_grad()
-
-        pred = model(input)
-        loss = criterion(pred, label)
-
-        loss.backward()
-        optimizer.step()
-
-        total_loss.append(loss)
-    return sum(total_loss)/len(total_loss)
-
-def valid(model, data_loader, criterion):
-    
-    model.eval()
-    total_loss = []
-    
-    with torch.no_grad():
-        for input, label in data_loader:
-
-            input = input
-            label = label
-
-            pred = model(input)
-            loss = criterion(pred, label)
-            total_loss.append(loss)
-        return sum(total_loss) / len(total_loss)
-
-def eval(model, data_loader):
-    
-    model.eval()
-    predictions = []
-    
-    with torch.no_grad():
-        for input, label in data_loader:
-
-            input = input
-            label = label
-
-            pred = model(input)
-            predictions.append(pred)
-        return predictions
 #%%
 # 모델 학습
 #model = RNN(input_size = 4, hidden_size = 8, num_layers = 1)
-model = LSTM(input_size = 8, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 8, hidden_size = 64, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
@@ -220,15 +169,12 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 #%%
-model = LSTM(input_size = 8, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 8, hidden_size = 64, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
 predictions = eval(model, test_loader)
 
-
-
 value = [tensor.item() for tensor in predictions]
-value
 plt.plot(value,color = 'red')
 plt.title('Prediction')
 plt.plot(test_set_org.y)

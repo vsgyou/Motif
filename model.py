@@ -48,3 +48,56 @@ class LSTM(nn.Module):
 
         return result
 # %%
+#%%
+def train(model, data_loader, optimizer, criterion):
+    
+    model.train()
+    total_loss = []
+
+    for input,label in data_loader:
+        
+        input = input
+        label = label
+
+        optimizer.zero_grad()
+
+        pred = model(input)
+        loss = criterion(pred, label)
+
+        loss.backward()
+        optimizer.step()
+
+        total_loss.append(loss)
+    return sum(total_loss)/len(total_loss)
+
+def valid(model, data_loader, criterion):
+    
+    model.eval()
+    total_loss = []
+    
+    with torch.no_grad():
+        for input, label in data_loader:
+
+            input = input
+            label = label
+
+            pred = model(input)
+            loss = criterion(pred, label)
+            total_loss.append(loss)
+        return sum(total_loss) / len(total_loss)
+
+def eval(model, data_loader):
+    
+    model.eval()
+    predictions = []
+    
+    with torch.no_grad():
+        for input, label in data_loader:
+
+            input = input
+            label = label
+
+            pred = model(input)
+            predictions.append(pred)
+        return predictions
+# %%
