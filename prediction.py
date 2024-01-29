@@ -11,15 +11,29 @@ import copy
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torch.optim.adam import Adam
+import wandb
 #%%
 from preprocess import *
 from model import *
+#%%
 
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="3years data (input = 6, hidden = 8) all scaling",
+    
+    # track hyperparameters and run metadata
+    config={
+    "learning_rate": 0.001,
+    "architecture": "LSTM",
+    "dataset": "Samsung",
+    "epochs": 200,
+    }
+)
 #%%
 # Data
 stock_code = '005930.KS'
-start_date = '2020-01-29'
-end_date = '2024-01-30'
+start_date = '2020-07-30'
+end_date = '2023-07-30'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 seq_len = 7    
@@ -113,17 +127,17 @@ for i in range(test_num_samples):
 train_set.x = torch.cat([train_set.x, train_pattern], dim = 2)
 valid_set.x = torch.cat([valid_set.x, valid_pattern], dim = 2)
 test_set.x = torch.cat([test_set.x, test_pattern], dim =2)
-#%%
-# 원래 sequence와 패턴 모두 스케일링 x
-train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
-train_set_org.x = train_set_org.x / 5000
-train_set_org.y = train_set_org.y / 5000
-valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern_noscale], dim = 2)
-valid_set_org.x = valid_set_org.x / 5000
-valid_set_org.y = valid_set_org.y / 5000
-test_set_org.x = torch.cat([test_set_org.x, test_pattern_noscale], dim =2)
-test_set_org.x = test_set_org.x / 5000
-test_set_org.y = test_set_org.y / 5000
+# #%%
+# # 원래 sequence와 패턴 모두 스케일링 x
+# train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
+# train_set_org.x = train_set_org.x / 5000
+# train_set_org.y = train_set_org.y / 5000
+# valid_set_org.x = torch.cat([valid_set_org.x, valid_pattern_noscale], dim = 2)
+# valid_set_org.x = valid_set_org.x / 5000
+# valid_set_org.y = valid_set_org.y / 5000
+# test_set_org.x = torch.cat([test_set_org.x, test_pattern_noscale], dim =2)
+# test_set_org.x = test_set_org.x / 5000
+# test_set_org.y = test_set_org.y / 5000
 
 #%%
 #train_set_org.x = torch.cat([train_set_org.x,train_pattern_noscale],dim = 2)    # minmax 안된 x
@@ -138,13 +152,13 @@ train_loader = DataLoader(train_set, batch_size = 64, shuffle = False, drop_last
 valid_loader = DataLoader(valid_set, batch_size = 1, shuffle = False)
 test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 
-test_set.x = test_pattern
-train_set.x = train_pattern
-valid_set.x = valid_pattern
+# test_set.x = test_pattern
+# train_set.x = train_pattern
+# valid_set.x = valid_pattern
 
-train_loader = DataLoader(train_set_org, batch_size = 64, shuffle = False, drop_last = True)
-valid_loader = DataLoader(valid_set_org, batch_size = 1, shuffle = False)
-test_loader = DataLoader(test_set_org, batch_size = 1, shuffle = False)
+# train_loader = DataLoader(train_set_org, batch_size = 64, shuffle = False, drop_last = True)
+# valid_loader = DataLoader(valid_set_org, batch_size = 1, shuffle = False)
+# test_loader = DataLoader(test_set_org, batch_size = 1, shuffle = False)
 
 #%%
 
@@ -216,9 +230,4 @@ print(f"정확도: {accuracy * 100:.2f}%")
 
 
 
-
-
-
-
-
-
+# %%
