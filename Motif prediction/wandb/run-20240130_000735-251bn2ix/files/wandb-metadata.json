@@ -1,0 +1,45 @@
+{
+    "os": "macOS-10.16-x86_64-i386-64bit",
+    "python": "3.11.2",
+    "heartbeatAt": "2024-01-29T15:07:36.414587",
+    "startedAt": "2024-01-29T15:07:35.203527",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/jeongjiun/Documents/GitHub/Motif/Motif prediction/prediction.py",
+    "codePathLocal": "prediction.py",
+    "codePath": "Motif prediction/prediction.py",
+    "git": {
+        "remote": "https://github.com/vsgyou/Motif.git",
+        "commit": "8ba1a5237145fb5af0708d7f683fe62031c855fc"
+    },
+    "email": "105686490+vsgyou@users.noreply.github.com",
+    "root": "/Users/jeongjiun/Documents/GitHub/Motif",
+    "host": "jeongjiun-ui-iMac.local",
+    "username": "jeongjiun",
+    "executable": "/Users/jeongjiun/opt/anaconda3/envs/torch2/bin/python",
+    "cpu_count": 6,
+    "cpu_count_logical": 6,
+    "cpu_freq": {
+        "current": 3000,
+        "min": 3000,
+        "max": 3000
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3000,
+            "min": 3000,
+            "max": 3000
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 956.9770622253418,
+            "used": 87.61909103393555
+        }
+    },
+    "memory": {
+        "total": 64.0
+    }
+}

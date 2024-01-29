@@ -17,27 +17,26 @@ from preprocess import *
 from model import *
 #%%
 
-wandb.init(
-    # set the wandb project where this run will be logged
-    project="All scailing",
+# wandb.init(
+#     # set the wandb project where this run will be logged
+#     project="All scailing",
     
-    # track hyperparameters and run metadata
-    config={
-    "learning_rate": 0.001,
-    "architecture": "LSTM",
-    "dataset": "Samsung",
-    "epochs": 200,
-    }
-)
+#     # track hyperparameters and run metadata
+#     config={
+#     "learning_rate": 0.001,
+#     "architecture": "LSTM",
+#     "dataset": "Samsung",
+#     "epochs": 200,
+#     }
+# )
 #%%
 # Data
 stock_code = '005930.KS'
 start_date = '2020-07-30'
 end_date = '2023-07-30'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
-close = samsung_data['Close']
 seq_len = 7    
-k = 5
+k = 10
 
 epochs = 200
 early_stopping_count = 0
@@ -163,7 +162,7 @@ test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 #%%
 
 # 모델 학습
-model = LSTM(input_size = 6, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 11, hidden_size = 16, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
@@ -172,9 +171,9 @@ with tqdm(range(1, epochs+1)) as tr:
         valid_loss, valid_predictions, valid_labels = valid(model, valid_loader, criterion)
         valid_acc = calculate_accuracy(valid_predictions, valid_labels)
 
-        wandb.log({"train_loss":train_loss, 
-                   "valid_loss":valid_loss, 
-                   "valid_acc":valid_acc})
+        # wandb.log({"train_loss":train_loss, 
+        #            "valid_loss":valid_loss, 
+        #            "valid_acc":valid_acc})
         
         if epoch % 10 == 0:
             print(f'epoch:{epoch}, train_loss:{train_loss.item():5f}')
@@ -193,13 +192,13 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 #%%
-model = LSTM(input_size = 6, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 11, hidden_size = 16, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
 test_predictions, test_labels = eval(model, test_loader)
 test_acc = calculate_accuracy(test_predictions, test_labels)
 
-wandb.log({"test_acc":test_acc})
+# wandb.log({"test_acc":test_acc})
 
 #%%
 test_pred = [tensor.item() for tensor in test_predictions]
