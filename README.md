@@ -11,3 +11,12 @@
 <img width="1810" alt="image" src="https://github.com/vsgyou/Motif/assets/105686490/df806339-3830-4a81-8d6d-3b8b196b8e2b">
 
 - Use K-ball Algorithm : Locating Motifs in Time-Series Data (Link)
+
+
+
+## evaluation
+- 2020-07-30 ~ 2023-07-30의 삼성전자 데이터 739개
+- 각 시퀀스와 유사한 패턴 5가지씩 찾아서 변수로 활용한 결과
+- 현재와 다음날의 값을 비교하여 증가, 감소에 대한 분류 결과 정확도는 49%
+  
+![image](https://github.com/vsgyou/Motif/assets/105686490/c704a594-dc5b-43b4-81f8-e1c2364df992)
