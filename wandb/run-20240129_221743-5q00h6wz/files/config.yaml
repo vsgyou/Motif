@@ -8,7 +8,7 @@ architecture:
   value: LSTM
 dataset:
   desc: null
-  value: samsung (2020-07-30~2023-07-30)
+  value: Samsung
 epochs:
   desc: null
   value: 200
@@ -20,7 +20,7 @@ _wandb:
     framework: torch
     is_jupyter_run: true
     is_kaggle_kernel: false
-    start_time: 1706531805.905264
+    start_time: 1706534263.778044
     t:
       1:
       - 1

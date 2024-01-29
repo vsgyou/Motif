@@ -19,7 +19,7 @@ from model import *
 
 wandb.init(
     # set the wandb project where this run will be logged
-    project="3years data (input = 6, hidden = 8) all scaling",
+    project="All scailing",
     
     # track hyperparameters and run metadata
     config={
@@ -163,15 +163,19 @@ test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 #%%
 
 # 모델 학습
-#model = RNN(input_size = 4, hidden_size = 8, num_layers = 1)
 model = LSTM(input_size = 6, hidden_size = 32, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
     for epoch in tr:
         train_loss= train(model,train_loader, optimizer, criterion)
-        valid_loss = valid(model, valid_loader, criterion)
+        valid_loss, valid_predictions, valid_labels = valid(model, valid_loader, criterion)
+        valid_acc = calculate_accuracy(valid_predictions, valid_labels)
 
+        wandb.log({"train_loss":train_loss, 
+                   "valid_loss":valid_loss, 
+                   "valid_acc":valid_acc})
+        
         if epoch % 10 == 0:
             print(f'epoch:{epoch}, train_loss:{train_loss.item():5f}')
             print(f'epoch:{epoch}, valid_loss:{valid_loss.item():5f}')
@@ -192,9 +196,13 @@ with tqdm(range(1, epochs+1)) as tr:
 model = LSTM(input_size = 6, hidden_size = 32, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
-predictions = eval(model, test_loader)
+test_predictions, test_labels = eval(model, test_loader)
+test_acc = calculate_accuracy(test_predictions, test_labels)
 
-value = [tensor.item() for tensor in predictions]
+wandb.log({"test_acc":test_acc})
+
+#%%
+value = [tensor.item() for tensor in test_predictions]
 value
 plt.plot(value,color = 'red')
 plt.title('Prediction')
@@ -202,32 +210,3 @@ plt.plot(test_set.y)
 plt.title('true')
 plt.legend()
 #%%
-# 정확도 계산
-pred_labels = [1 if (predictions[i+1] - predictions[i]).item() > 0 else 0 for i in range(len(predictions)-1)]
-true_labels = [1 if (test_set.y[i+1] - test_set.y[i]).item() > 0 else 0 for i in range(len(test_set.y)-1)]
-
-
-def calculate_accuracy(pred_labels, true_labels):
-    # 예측과 실제 레이블의 길이가 같은지 확인
-    if len(pred_labels) != len(true_labels):
-        raise ValueError("두 리스트의 길이가 일치하지 않습니다.")
-
-    # 맞춘 예측의 개수 계산
-    correct_predictions = sum(1 for pred, true in zip(pred_labels, true_labels) if pred == true)
-
-    # 전체 예측 개수 계산
-    total_predictions = len(pred_labels)
-
-    # 정확도 계산
-    accuracy = correct_predictions / total_predictions
-
-    return accuracy
-
-# 예시로 정확도 측정
-accuracy = calculate_accuracy(pred_labels, true_labels)
-print(f"정확도: {accuracy * 100:.2f}%")
-
-
-
-
-# %%

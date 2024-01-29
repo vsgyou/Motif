@@ -1,8 +1,8 @@
 {
     "os": "Windows-10-10.0.19045-SP0",
     "python": "3.11.2",
-    "heartbeatAt": "2024-01-29T11:19:50.097869",
-    "startedAt": "2024-01-29T11:19:48.807401",
+    "heartbeatAt": "2024-01-29T13:17:44.820972",
+    "startedAt": "2024-01-29T13:17:43.754827",
     "docker": null,
     "cuda": null,
     "args": [],
@@ -12,7 +12,7 @@
     "codePath": "prediction.py",
     "git": {
         "remote": "https://github.com/vsgyou/Motif.git",
-        "commit": "18bda9416f3b6813d2c8b9fe70616bfd40506b9a"
+        "commit": "39c8bd68ea1dbb7e94bff8d0b419cbd97e56f66d"
     },
     "email": "vsgyou@naver.com",
     "root": "C:/Users/USER/Documents/GitHub/Motif",
@@ -36,7 +36,7 @@
     "disk": {
         "/": {
             "total": 232.4289093017578,
-            "used": 193.13155364990234
+            "used": 193.5526885986328
         }
     },
     "gpu": "GeForce GTX 1050",
