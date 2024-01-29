@@ -202,11 +202,11 @@ test_acc = calculate_accuracy(test_predictions, test_labels)
 wandb.log({"test_acc":test_acc})
 
 #%%
-value = [tensor.item() for tensor in test_predictions]
-value
-plt.plot(value,color = 'red')
-plt.title('Prediction')
-plt.plot(test_set.y)
-plt.title('true')
+test_pred = [tensor.item() for tensor in test_predictions]
+test_labels = [tensor.item() for tensor in test_labels]
+
+plt.plot(test_pred,color = 'red', label = "pred")
+plt.plot(test_labels, label = "true")
+plt.title("2020-07-30~2023-07-30 all minmax scailing")
 plt.legend()
 #%%
