@@ -11,8 +11,6 @@ import copy
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torch.optim.adam import Adam
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import MinMaxScaler
 #%%
 from preprocess import *
 from model import *
