@@ -21,7 +21,7 @@ from model import *
 # Data
 stock_code = '005930.KS'
 start_date = '2020-07-31'
-end_date = '2023-07-31'
+end_date = '2024-02-01'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 seq_len = 7    
