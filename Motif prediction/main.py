@@ -35,6 +35,7 @@ stock_code = '005930.KS'
 start_date = '2020-07-30'
 end_date = '2023-07-30'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
+close = samsung_data['Close']
 seq_len = 7    
 k = 10
 
@@ -126,6 +127,7 @@ for i in range(test_num_samples):
 train_set.x = torch.cat([train_set.x, train_pattern], dim = 2)
 valid_set.x = torch.cat([valid_set.x, valid_pattern], dim = 2)
 test_set.x = torch.cat([test_set.x, test_pattern], dim =2)
+
 # #%%
 # # 원래 sequence와 패턴 모두 스케일링 x
 # train_set_org.x = torch.cat([train_set_org.x, train_pattern_noscale],dim = 2)
@@ -137,13 +139,6 @@ test_set.x = torch.cat([test_set.x, test_pattern], dim =2)
 # test_set_org.x = torch.cat([test_set_org.x, test_pattern_noscale], dim =2)
 # test_set_org.x = test_set_org.x / 5000
 # test_set_org.y = test_set_org.y / 5000
-
-#%%
-#train_set_org.x = torch.cat([train_set_org.x,train_pattern_noscale],dim = 2)    # minmax 안된 x
-# scaling을 거치고 찾은 패턴을 찾아 변환되기 전의 값으로 합침
-# train_set_org scaling
-
-#train_trans.x = torch.cat([train_trans.x, train_pattern], dim = 2)
 
 #%%
 # 데이터 로더
@@ -162,7 +157,7 @@ test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 #%%
 
 # 모델 학습
-model = LSTM(input_size = 11, hidden_size = 16, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 10, hidden_size = 32, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
@@ -192,7 +187,7 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 #%%
-model = LSTM(input_size = 11, hidden_size = 16, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 10, hidden_size = 32, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
 test_predictions, test_labels = eval(model, test_loader)

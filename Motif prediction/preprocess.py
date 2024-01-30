@@ -76,7 +76,6 @@ def pred_minmax(data):
     return bound, data
 
 def MA(data,p):
-    data = data.reset_index(drop = True)
     result = data.copy()
     result = data.rolling(window = p).mean()
     for i in range(p-1):
