@@ -15,6 +15,7 @@ import wandb
 #%%
 from preprocess import *
 from model import *
+
 #%%
 
 # wandb.init(
@@ -35,7 +36,7 @@ stock_code = '005930.KS'
 start_date = '2020-07-30'
 end_date = '2023-07-30'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
-df = samsung_data.iloc[:,0:4]
+df = samsung_data.iloc[:,:4]
 seq_len = 7    
 k = 10
 
@@ -44,13 +45,13 @@ early_stopping_count = 0
 early_stopping = 15
 best_valid_loss = float('inf')
 #%%
-train_set, test_set = split_data(data = df, input_window = 7, test_len = 60)
-train_set, valid_set = split_data(data = train_set, input_window = 7, test_len = 60)
+train_set, test_set = split_data(data = df, input_window = seq_len, test_len = 120)
+train_set, valid_set = split_data(data = train_set, input_window = seq_len, test_len = 120)
 
-train_set = windowDataset_candle(data = train_set, input_window = 7, output_window = 1, input_size = 4, stride = 1)
-valid_set = windowDataset_candle(data = valid_set, input_window = 7, output_window = 1, input_size = 4, stride = 1)
-test_set = windowDataset_candle(data = test_set, input_window = 7, output_window = 1, input_size = 4, stride = 1)
-close_set = windowDataset_candle(data = df, input_window = 7, output_window = 1, input_size = 4, stride = 1)
+train_set = windowDataset_candle(data = train_set, input_window = seq_len, output_window = 1, input_size = df.shape[1], stride = 1)
+valid_set = windowDataset_candle(data = valid_set, input_window = seq_len, output_window = 1, input_size = df.shape[1], stride = 1)
+test_set = windowDataset_candle(data = test_set, input_window = seq_len, output_window = 1, input_size = df.shape[1], stride = 1)
+close_set = windowDataset_candle(data = df, input_window = seq_len, output_window = 1, input_size = df.shape[1], stride = 1)
 
 train_num_samples = train_set.x.shape[0]
 valid_num_samples = valid_set.x.shape[0]
@@ -134,9 +135,10 @@ for i in range(test_num_samples):
 
 #%%
 # 원래 sequence와 label은 기존 값, 패턴만 스케일링
-train_set.x = torch.cat([train_set.x, train_pattern], dim = 2)
-valid_set.x = torch.cat([valid_set.x, valid_pattern], dim = 2)
-test_set.x = torch.cat([test_set.x, test_pattern], dim =2)
+train_set.x = torch.cat([train_set.x[:,:,:3], train_pattern], dim = 2)
+valid_set.x = torch.cat([valid_set.x[:,:,:3], valid_pattern], dim = 2)
+test_set.x = torch.cat([test_set.x[:,:,:3], test_pattern], dim =2)
+
 
 # #%%
 # # 원래 sequence와 패턴 모두 스케일링 x
@@ -167,7 +169,7 @@ test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 #%%
 
 # 모델 학습
-model = LSTM(input_size = 14, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 13, hidden_size = 64, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
@@ -197,7 +199,7 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 #%%
-model = LSTM(input_size = 14, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 13, hidden_size = 64, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
 test_predictions, test_labels = eval(model, test_loader)
@@ -214,3 +216,9 @@ plt.plot(test_labels, label = "true")
 plt.title("2020-07-30~2023-07-30 all minmax scailing")
 plt.legend()
 #%%
+params = list(model.parameters())
+
+# 총 학습 가능한 파라미터의 수 출력
+total_params = sum(p.numel() for p in params)
+print(f"총 학습 가능한 파라미터 수: {total_params}, acc: {test_acc}")
+# %%
