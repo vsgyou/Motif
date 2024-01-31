@@ -52,17 +52,6 @@ valid_set = windowDataset_candle(data = valid_set, input_window = 7, output_wind
 test_set = windowDataset_candle(data = test_set, input_window = 7, output_window = 1, input_size = 4, stride = 1)
 close_set = windowDataset_candle(data = df, input_window = 7, output_window = 1, input_size = 4, stride = 1)
 
-
-
-
-
-
-
-
-
-
-
-
 train_num_samples = train_set.x.shape[0]
 valid_num_samples = valid_set.x.shape[0]
 test_num_samples = test_set.x.shape[0]
@@ -73,10 +62,21 @@ valid_set_org = copy.deepcopy(valid_set)
 test_set_org = copy.deepcopy(test_set)
 close_set_org = copy.deepcopy(close_set)
 
-train_bound, train_trans = pred_minmax(train_set)   # sequence별 max,min저장
-valid_bound, valid_trans = pred_minmax(valid_set)   # sequence별 max,min저장
-test_bound, test_trans = pred_minmax(test_set)   # sequence별 max,min저장
-close_bound, close_trans = pred_minmax(close_set)
+def pred_minmax_candle(data):
+    bound = []
+    for i in range(data.x.shape[0]):
+            for j in range(data.x.shape[2]):
+                max = data.x[i,:,j].max()
+                min = data.x[i,:,j].min()
+                bound.append([max,min])
+                data.x[i,:,j] = (data.x[i,:,j] - min) / (max - min)
+            data.y[i] = (data.y[i] - min) / (max - min)
+    return bound, data
+
+train_bound, train_trans = pred_minmax_candle(train_set)   # sequence별 max,min저장
+valid_bound, valid_trans = pred_minmax_candle(valid_set)   # sequence별 max,min저장
+test_bound, test_trans = pred_minmax_candle(test_set)   # sequence별 max,min저장
+close_bound, close_trans = pred_minmax_candle(close_set)
 
 train_pattern = torch.zeros([train_trans.x.shape[0],train_trans.x.shape[1],k])
 train_pattern_noscale = torch.zeros([train_set_org.x.shape[0],train_set_org.x.shape[1],k]) 
@@ -93,40 +93,40 @@ test_bound_list = torch.zeros([test_trans.x.shape[0],k+1,2])
 # train_pattern
 for i in range(train_num_samples):
 
-    train_dist = pd.DataFrame(data = torch.sum(torch.sqrt((train_trans.x[i] - train_trans.x)**2), 
-    dim = (1,2)), columns = ['Values'])
+    train_dist = pd.DataFrame(data = torch.sum(torch.sqrt((train_trans.x[i,:,-1].view(seq_len,1) - train_trans.x[:,:,-1].view(train_num_samples, seq_len, 1))**2), dim = (1,2)), columns = ['Values'])
 
     train_dist_sort = train_dist.sort_values(by = 'Values')
     train_ind = train_dist_sort.index[1:k+1].tolist()
 
-    train_pattern[i,:] = torch.cat([train_trans.x[j] for j in train_ind],dim = 1)   #[num_sample, seq_len, k]
-    train_pattern_noscale[i,:] = torch.cat([train_set_org.x[j] for j in train_ind], dim=1)
+    train_pattern[i,:] = torch.cat([train_trans.x[j,:,-1].view(seq_len,1) for j in train_ind],dim = 1)   #[num_sample, seq_len, k]
+    train_pattern_noscale[i,:] = torch.cat([train_set_org.x[j,:,-1].view(seq_len,1) for j in train_ind], dim=1)
     train_bound_list[i,:] = torch.cat((torch.FloatTensor(train_bound[i]).unsqueeze(0),
                                  torch.FloatTensor([train_bound[j] for j in train_ind])),
                                  dim=0)    # [num_sample, k+1, 2] 기존,패턴의 min,max 저장
 # valid_pattern
-
 for i in range(valid_num_samples):
-    valid_dist = pd.DataFrame(data = torch.sum(torch.sqrt((valid_trans.x[i] - close_trans.x[:train_num_samples-seq_len+i])**2), dim = (1,2)), columns = ['Values'])
+    length = train_num_samples-seq_len+i
+    valid_dist = pd.DataFrame(data = torch.sum(torch.sqrt((valid_trans.x[i,:,-1].view(seq_len,1) - close_trans.x[:length,:,-1].view(length, seq_len, 1))**2), dim = (1,2)), columns = ['Values'])
     
     valid_dist_sort = valid_dist.sort_values(by = 'Values')
     valid_ind = valid_dist_sort.index[0:k].tolist()
 
-    valid_pattern[i,:] = torch.cat([close_trans.x[j] for j in valid_ind], dim = 1)
-    valid_pattern_noscale[i,:] = torch.cat([close_set_org.x[j] for j in valid_ind], dim = 1)
+    valid_pattern[i,:] = torch.cat([close_trans.x[j,:,-1].view(seq_len,1) for j in valid_ind], dim = 1)
+    valid_pattern_noscale[i,:] = torch.cat([close_set_org.x[j,:,-1].view(seq_len,1) for j in valid_ind], dim = 1)
     
     valid_bound_list[i,:] = torch.cat((torch.FloatTensor(valid_bound[i]).unsqueeze(0), 
                                        torch.FloatTensor([close_bound[j] for j in valid_ind])), 
                                        dim = 0)
 # test_pattern
 for i in range(test_num_samples):
-    test_dist = pd.DataFrame(data = torch.sum(torch.sqrt((test_trans.x[i] - close_trans.x[:train_num_samples+valid_num_samples-seq_len+i])**2), dim = (1,2)), columns = ['Values'])
+    length = train_num_samples-seq_len+i
+    test_dist = pd.DataFrame(data = torch.sum(torch.sqrt((test_trans.x[i,:,-1].view(seq_len,1) - close_trans.x[:length,:,-1].view(length, seq_len, 1))**2), dim = (1,2)), columns = ['Values'])
     
     test_dist_sort = test_dist.sort_values(by = 'Values')
     test_ind = test_dist_sort.index[0:k].tolist()
 
-    test_pattern[i,:] = torch.cat([close_trans.x[j] for j in test_ind], dim = 1)
-    test_pattern_noscale[i,:] = torch.cat([close_set_org.x[j] for j in test_ind], dim = 1)
+    test_pattern[i,:] = torch.cat([close_trans.x[j,:,-1].view(seq_len,1) for j in test_ind], dim = 1)
+    test_pattern_noscale[i,:] = torch.cat([close_set_org.x[j,:,-1].view(seq_len,1) for j in test_ind], dim = 1)
     
     test_bound_list[i,:] = torch.cat((torch.FloatTensor(test_bound[i]).unsqueeze(0), 
                                        torch.FloatTensor([close_bound[j] for j in test_ind])), 
@@ -134,7 +134,7 @@ for i in range(test_num_samples):
 
 #%%
 # 원래 sequence와 label은 기존 값, 패턴만 스케일링
-train_set.x = torch.cat([train_set.x, train_pattern], dim = 2)
+train_set.x.shape = torch.cat([train_set.x, train_pattern], dim = 2)
 valid_set.x = torch.cat([valid_set.x, valid_pattern], dim = 2)
 test_set.x = torch.cat([test_set.x, test_pattern], dim =2)
 
