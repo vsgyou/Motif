@@ -24,13 +24,13 @@ class windowDataset(Dataset):
     def __init__(self, data, input_window, output_window, input_size, stride = 1):
         L = data.shape[0]
         self.seq_len = input_window + output_window
-        num_samles = (L - self.seq_len) // stride + 1
+        num_samples = (L - self.seq_len) // stride + 1
         data_tensor = torch.tensor(data).view(-1,1)
 
-        X = torch.zeros(num_samles, input_window, input_size)
-        y = torch.zeros(num_samles, output_window)
+        X = torch.zeros(num_samples, input_window, input_size)
+        y = torch.zeros(num_samples, output_window)
 
-        for i in range(num_samles):
+        for i in range(num_samples):
             X[i,:] = data_tensor[i*stride : i*stride + input_window]
             y[i,:] = data_tensor[i*stride + input_window : i *stride+self.seq_len]
         self.x = X
@@ -40,6 +40,30 @@ class windowDataset(Dataset):
         return self.x[idx], self.y[idx]
     def __len__(self):
         return self.len
+
+class windowDataset_candle(Dataset):
+    def __init__(self, data, input_window, output_window, input_size, stride = 1):
+        L = data.shape[0]
+        self.seq_len = input_window + output_window
+        num_samples = (L - self.seq_len) // stride + 1
+        data_tensor = torch.tensor(data.values)
+
+        X = torch.zeros(num_samples, input_window, input_size)
+        y = torch.zeros(num_samples, output_window)
+
+        for i in range(num_samples):
+            X[i,:] = data_tensor[i*stride : i*stride + input_window,:]
+            y[i,:] = data_tensor[i*stride + input_window : i *stride+self.seq_len,-1]
+        self.x = X
+        self.y = y
+        self.len = len(X)
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+    def __len__(self):
+        return self.len
+
+
+
 
 def loader(train_set, test_set, batch_size = 64):
     train_loader = DataLoader(train_set, batch_size = batch_size, shuffle = True)

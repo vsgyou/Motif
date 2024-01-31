@@ -157,7 +157,7 @@ test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 #%%
 
 # 모델 학습
-model = LSTM(input_size = 11, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 11, hidden_size = 256, output_size = 1, num_layers = 3)
 optimizer = optim.Adam(model.parameters(), lr = 0.001)
 criterion = nn.MSELoss()
 with tqdm(range(1, epochs+1)) as tr:
@@ -187,7 +187,7 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 #%%
-model = LSTM(input_size = 11, hidden_size = 32, output_size = 1, num_layers = 3)
+model = LSTM(input_size = 11, hidden_size = 256, output_size = 1, num_layers = 3)
 model.load_state_dict(torch.load('best_lstm.pth'))
 
 test_predictions, test_labels = eval(model, test_loader)
