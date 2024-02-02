@@ -56,10 +56,12 @@ hn.shape
 cn.shape
 hn[:,:,0]
 
-conv = nn.Conv2d(in_channels = 6,
-                 out_channels = 32,
-                 kernel_size = [7,1],
+conv = nn.Conv2d(in_channels = 7,
+                 out_channels = 64,
+                 kernel_size = [6,1],
                  stride = 1)
 
+input = input.reshape(64,7,6,1)
+conv(input).shape
 input.shape
-conv
+# %%
