@@ -58,6 +58,7 @@ hn.shape
 cn.shape
 hn[:,:,0]
 
+conv = nn.Conv2d(in_channels = 7, out_channels = 32, kernel_size = [6,1], stride = 1)
 
 
 input = input.reshape(64,7,6)
@@ -129,8 +130,8 @@ class TemporalPatternAttentionMechanism():
         new_h = torch.concat([hidden, v], axis = 1)
         Linear2 = nn.Linear(new_h.shape[1], input_size)
         h_prime = Linear2(new_h)
-        
-                
+
+
 
 
 
