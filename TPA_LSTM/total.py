@@ -4,7 +4,10 @@ import torch.nn as nn
 import torch
 import pandas as pd
 import tensorflow as tf
-from tensorflow.layers import dense
+import torch.optim as optim
+import matplotlib.pyplot as plt
+import tqdm
+from model import *
 from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import train_test_split
 #%%
@@ -12,6 +15,7 @@ code = 'AAPL'
 start_num = '2020-07-30'
 end_num = '2023-07-30'
 data = yf.download(code, start_num, end_num)
+data = data.iloc[:,:4]
 # %%
 def split_data(data, input_window, test_len):
     train_set, test_set = train_test_split(data, test_size = test_len, shuffle = False)
@@ -25,7 +29,7 @@ class windowDataset(Dataset):
         num_samples = (L - self.seq_len) // stride + 1
         
         X = torch.zeros(num_samples, input_window, input_size)
-        y = torch.zeros(num_samples,output_window)
+        y = torch.zeros(num_samples, output_window)
         data_tensor = torch.tensor(data.values)
         for i in range(num_samples):
             X[i,:] = data_tensor[i*stride : i*stride + input_window]
@@ -34,7 +38,7 @@ class windowDataset(Dataset):
             self.y = y
             self.len = len(X)
     def __getitem__(self, idx):
-        return self.x[idx], self.x[idx]
+        return self.x[idx], self.y[idx]
     def __len__(self):
         return self.len
 
@@ -46,95 +50,80 @@ train_set = windowDataset(train_set, input_window= 7, output_window= 1, input_si
 test_set = windowDataset(test_set, input_window = 7, output_window= 1, input_size = test_set.shape[1])
 train_loader = DataLoader(train_set, batch_size = 64, shuffle = False, drop_last = True)
 test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
-#%%
-for input, label in train_loader:
-    input = input
-    label = label
-#%%
-lstm = nn.LSTM(input_size = data.shape[1], hidden_size = 8, num_layers = 1,batch_first = True)
-output,(hn,cn) = lstm(input)
-output.shape
-hn.shape
-cn.shape
-hn[:,:,0]
-
-conv = nn.Conv2d(in_channels = 7, out_channels = 32, kernel_size = [6,1], stride = 1)
 
 
-input = input.reshape(64,7,6)
+#%%    
+input_size = 4
+hidden_size = 8
+seq_length = 7
+filter_num = 32
+lstm_model = LSTM(input_size = input_size, hidden_size = hidden_size)
+tpa_model = TemporalPatternAttentionMechanism(seq_length = seq_length, input_size = hidden_size, filter_num = filter_num)
 
+criterion = nn.MSELoss()
+optimizer = optim.Adam(list(lstm_model.parameters())+ list(tpa_model.parameters()), lr = 0.001) 
+# %%
+# 학습
+num_epochs = 200
+train_losses = []
+test_losses = []
+
+for epoch in range(num_epochs):
+    lstm_model.train()
+    tpa_model.train()
+    train_loss = 0.0
+    for input_data, label in train_loader:
+        optimizer.zero_grad()
+
+        lstm_output, hn = lstm_model(input_data)
+        output = tpa_model(hn, lstm_output)
+
+        loss = criterion(output, label)
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+    train_loss /= len(train_loader)
+    print(train_loss)
+    train_losses.append(train_loss)
 
 # %%
-attn_size = 8
-attn_length = 7
-batch_size = 64
-
-query = hn
-query = query.squeeze(0)
-query.shape
-atten_states = output
-filter_num = 32
-filter_size = 1
-linear = nn.Linear(query.size(1), filter_num, bias = False)
-w = linear(query)
-w = w.view(-1,1,filter_num)
-atten_states.shape
-reshape_attn_vecs  = atten_states.reshape([batch_size,1,attn_length,attn_size])
-conv = nn.Conv2d(in_channels = 1,
-                 out_channels = 32,
-                 kernel_size = [7,1],
-                 stride = 1)
-conv_vecs = conv(reshape_attn_vecs)
-conv_vecs = conv_vecs.squeeze()
-feature_dim = attn_size - filter_size + 1
-conv_vecs = conv_vecs.reshape([batch_size, feature_dim, filter_num])
-conv_vecs.shape
-
-s = torch.sum(torch.mul(conv_vecs,w),dim = 2)
-s.shape
-sigmoid = nn.Sigmoid()
-a = sigmoid(s)
-a.shape
-
-d = torch.sum(torch.mul(a.reshape([-1,feature_dim,1]),conv_vecs),[1])
-d.shape
-new_conv_vec = d
-con = torch.concat([query,new_conv_vec],axis = 1)
-dense_layer =nn.Linear(con.shape[1],attn_size)
-new_attns = dense_layer(con)
-start_indices = [0,1,0]
-sizes = [-1,-1,-1]
-new_attn_states = atten_states.narrow(1, start_indices[1], sizes[1]).narrow(2, start_indices[2], sizes[2])
-#%%
-class TemporalPatternAttentionMechanism():
-    def __call__(self, hidden, input, batch_size, seq_length, input_size):
+class TPA(nn.Module):
+    def __init__(self, seq_len, input_size, hidden_size, filter_num):
+        super(TPA, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.lstm = nn.LSTM(input_size = input_size, hidden_size = self.hidden_size, num_layers = 1, batch_first = True)
+        self.conv = nn.Conv2d(in_channels = 1, out_channels = filter_num, kernel_size = (seq_len-1,1))
+        self.linear1 = nn.Linear(hidden_size, filter_num)
+        self.sigmoid = nn.Sigmoid()
+        self.linear2 = nn.Linear(filter_num + hidden_size, hidden_size)
+        self.fc_layer = nn.Linear(hidden_size, 1)
     
-#hidden : output of LSTM (hn) [batch, hidden]
-#input : output of LSTM output [batch, seq_len, hidden]
-        filter_num = 32
-        filter_size = 1
-        Linear1 = nn.Linear(hidden.shape[1], filter_num, bias = False)
-        w = Linear1(hidden).view(-1,1,filter_num)
-        reshape_input = input.reshape([batch_size, 1, seq_length, input_size])
-        conv = nn.Conv2d(in_channels = 1, output_channels = 32, kernel_size = [seq_length, 1], stride = 1)
-        H_c = conv(reshape_input).squeeze()
+    def forward(self, input):
+        output, (hn,cn) = self.lstm(input)
+        h_before = output[:,:-1,:]
+        h_now = hn.reshape(-1,1,hn.shape[2])
+        h_before = h_before.unsqueeze(1) # [batch, 1, seq_len-1, hidden_size]
+
+        H = self.conv(h_before).squeeze() # [batch, out_channels, hidden_size]
+        H = H.permute(0,2,1) # [batch, hidden_size, out_channels]
+
+        w_h = self.linear1(h_now)
+        score = torch.sum(torch.mul(H, w_h), dim = 2)
         
-        feature_dim = input_size + filter_size - 1
-        H_c = H_c.reshape([batch_size, feature_dim, filter_num])
+        a = self.sigmoid(score)
+        v = torch.sum(torch.mul(a.unsqueeze(2), H), dim=1) # [batch, filter_num]
+        
+        h_v = torch.cat((h_now.squeeze(), v), dim=1) # [batch, filter_num+hidden_size]
+        h_prime = self.linear2(h_v) # [batch, hidden_size]
+        
+        output = self.fc_layer(h_prime) # [batch, 1]
+        return output
 
-        s = torch.sum(torch.mul(H_c, w), dim = 2)
-        sigmoid = nn.Sigmoid()
-        a = sigmoid(s)
-
-        v = torch.sum(torch.mul(a.reshape([-1, feature_dim, 1]), H_c), dim = 1)
-        new_h = torch.concat([hidden, v], axis = 1)
-        Linear2 = nn.Linear(new_h.shape[1], input_size)
-        h_prime = Linear2(new_h)
-
-
-
-
-
-
-
+# %%
+model = TPA(seq_len = 7, input_size = 4, hidden_size = 8, filter_num = 32)
+output = model(input)
+output
+# %%
 
