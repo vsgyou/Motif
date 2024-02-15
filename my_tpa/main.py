@@ -81,12 +81,12 @@ train_set.x = torch.cat([train_scale.x, train_pattern], dim = 2)
 valid_set.x = torch.cat([valid_scale.x, valid_pattern], dim = 2)
 test_set.x = torch.cat([test_scale.x, test_pattern], dim =2)
 # %%
-train_loader = DataLoader(train_set, batch_size = 64, shuffle = False, drop_last = True)
+train_loader = DataLoader(train_set, batch_size = 64, shuffle = False, drop_last = False)
 valid_loader = DataLoader(valid_set, batch_size = 1, shuffle = False)
 test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 
 # %%
-model = TPA_my(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, filter_num = filter_num)
+model = TPA_my2(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, filter_num = filter_num)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
 epochs = 100
@@ -121,14 +121,16 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 # %%
-model = TPA_my(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, filter_num = filter_num)
+model = TPA_my2(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, filter_num = filter_num)
 model.load_state_dict(torch.load('best_TPA.pth'))
 test_predictions, test_labels = eval(model, test_loader)
 test_acc = calculate_accuracy(test_predictions, test_labels)
 test_predictions_np = [tensor.item() for tensor in test_predictions]
 test_labels_np = [tensor.item() for tensor in test_labels]
 
+test_mse = torch.mean((torch.tensor(test_predictions) - torch.tensor(test_labels))**2)
+
 plt.plot(test_predictions_np,color = 'red', label = "pred")
 plt.plot(test_labels_np, label = "true")
-print(f'test_acc :{test_acc}')
+print(f'test_acc :{test_acc:5f}, test_mse : {test_mse:5f}')
 # %%

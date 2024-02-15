@@ -8,15 +8,16 @@ class TPA_my(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = self.hidden_size, num_layers = 1, batch_first = True)
-        self.conv = nn.Conv2d(in_channels = 1, out_channels = filter_num, kernel_size = (seq_len-1,1))
+        self.conv = nn.Conv2d(in_channels = 1, out_channels = filter_num, kernel_size = (seq_len,1))
         self.linear1 = nn.Linear(hidden_size, filter_num)
-        self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Softmax()
         self.linear2 = nn.Linear(filter_num + hidden_size, hidden_size)
         self.fc_layer = nn.Linear(hidden_size, 1)
     
     def forward(self, input):
         output, (hn,cn) = self.lstm(input)
-        h_before = output[:,:-1,:]
+        #h_before = output[:,:-1,:]
+        h_before = output
         h_now = hn.reshape(-1,1,hn.shape[2])
         h_before = h_before.unsqueeze(1) # [batch, 1, seq_len-1, hidden_size]
 
@@ -43,13 +44,14 @@ class TPA_my2(nn.Module):
         self.lstm = nn.LSTM(input_size = input_size, hidden_size = self.hidden_size, num_layers = 1, batch_first = True)
         self.conv = nn.Conv2d(in_channels = 1, out_channels = filter_num, kernel_size = (hidden_size,1))
         self.linear1 = nn.Linear(hidden_size, filter_num)
-        self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Softmax()
         self.linear2 = nn.Linear(filter_num + hidden_size, hidden_size)
         self.fc_layer = nn.Linear(hidden_size, 1)
     
     def forward(self, input):
         output, (hn,cn) = self.lstm(input)
-        h_before = output[:,:-1,:]
+        #h_before = output[:,:-1,:]
+        h_before = output
         h_now = hn.reshape(-1,1,hn.shape[2])
         h_before = h_before.unsqueeze(1) # [batch, 1, seq_len-1, hidden_size]
 
