@@ -71,10 +71,8 @@ plt.plot(X[L1])
 plt.plot(X[L2])
 # %%
 
-plt.plot(close[0:100])
+plt.plot(close[100:250])
 plt.plot(close[L1:L1+seq_len],color = 'red')
-
-plt.plot(close[520-53:620-53])
 plt.plot(close[L2:L2+seq_len],color = 'red')
 
 
