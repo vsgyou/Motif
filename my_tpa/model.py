@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch
 
 class TPA_my(nn.Module):
-    def __init__(self, seq_len, input_size, hidden_size, filter_num):
+    def __init__(self, seq_len, input_size, hidden_size, output_size, filter_num):
         super(TPA_my, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -12,7 +12,7 @@ class TPA_my(nn.Module):
         self.linear1 = nn.Linear(hidden_size, filter_num)
         self.sigmoid = nn.Softmax()
         self.linear2 = nn.Linear(filter_num + hidden_size, hidden_size)
-        self.fc_layer = nn.Linear(hidden_size, 1)
+        self.fc_layer = nn.Linear(hidden_size, output_size)
     
     def forward(self, input):
         output, (hn,cn) = self.lstm(input)
@@ -33,11 +33,11 @@ class TPA_my(nn.Module):
         h_v = torch.cat((h_now.squeeze(dim = 1), v), dim=1) # [batch, filter_num+hidden_size]
         h_prime = self.linear2(h_v) # [batch, hidden_size]
         
-        output = self.fc_layer(h_prime) # [batch, 1]
+        output = self.fc_layer(h_prime) # [batch, output_size]
         return output
     
 class TPA_my2(nn.Module):
-    def __init__(self, seq_len, input_size, hidden_size, filter_num):
+    def __init__(self, seq_len, input_size, hidden_size, output_size, filter_num):
         super(TPA_my2, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -46,7 +46,7 @@ class TPA_my2(nn.Module):
         self.linear1 = nn.Linear(hidden_size, filter_num)
         self.sigmoid = nn.Softmax()
         self.linear2 = nn.Linear(filter_num + hidden_size, hidden_size)
-        self.fc_layer = nn.Linear(hidden_size, 1)
+        self.fc_layer = nn.Linear(hidden_size, output_size)
     
     def forward(self, input):
         output, (hn,cn) = self.lstm(input)
@@ -67,7 +67,7 @@ class TPA_my2(nn.Module):
         h_v = torch.cat((h_now.squeeze(dim = 1), v), dim=1) # [batch, filter_num+hidden_size]
         h_prime = self.linear2(h_v) # [batch, hidden_size]
         
-        output = self.fc_layer(h_prime) # [batch, 1]
+        output = self.fc_layer(h_prime) # [batch, output_size]
         return output
 
 
@@ -83,7 +83,7 @@ def train(model, data_loader, optimizer, criterion):
         optimizer.zero_grad()
 
         pred = model(input)
-        loss = criterion(pred, label)
+        loss = criterion(pred, label.squeeze(2))
 
         loss.backward()
         optimizer.step()
@@ -106,7 +106,7 @@ def valid(model, data_loader, criterion):
 
             pred = model(input)
             predictions.append(pred)
-            loss = criterion(pred, label)
+            loss = criterion(pred, label.squeeze(2))
             total_loss.append(loss)
         return sum(total_loss) / len(total_loss), predictions, labels
 def eval(model, data_loader):
@@ -142,4 +142,6 @@ def calculate_accuracy(pred_labels, true_labels):
     accuracy = correct_predictions / total_predictions
 
     return accuracy
+
+
 # %%

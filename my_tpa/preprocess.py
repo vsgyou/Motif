@@ -3,6 +3,7 @@ import torch
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
+import yfinance as yf
 
 def split_data(data, input_window, test_len):
     train_set, test_set = train_test_split(data, test_size = test_len, shuffle = False)
@@ -17,7 +18,7 @@ class windowDataset(Dataset):
         data_tensor = torch.tensor(data).view(-1,1)
 
         X = torch.zeros(num_samples, input_window, input_size)
-        y = torch.zeros(num_samples, output_window)
+        y = torch.zeros(num_samples, output_window, 1)
 
         for i in range(num_samples):
             X[i,:] = data_tensor[i*stride : i*stride + input_window]
@@ -39,3 +40,24 @@ def MinMax(data):
     return data
 
 # %%
+stock_code = '005930.KS'
+start_date = '2020-07-30'
+end_date = '2023-07-30'
+samsung_data = yf.download(stock_code, start = start_date, end = end_date)
+close = samsung_data['Close']
+seq_len = 7    
+k = 10
+input_window = 7
+output_window = 3
+
+train_set, test_set = split_data(data = close, input_window = 7, test_len = 60)
+train_set, valid_set = split_data(data = train_set, input_window = 7, test_len = 60)
+data_tensor = torch.tensor(close).view(-1,1)
+L = close.shape[0]
+seq_len = 10
+num_samples = (L - seq_len) + 1
+X = torch.zeros(num_samples, input_window, 1)
+y = torch.zeros(num_samples, output_window,1)
+X[0,:] = data_tensor[0:0+input_window]
+y[0,:] = data_tensor[0+input_window : seq_len]
+

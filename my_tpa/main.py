@@ -18,7 +18,7 @@ end_date = '2023-07-30'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 seq_len = 7    
-k = 10
+k = 50
 
 epochs = 200
 early_stopping_count = 0
@@ -29,13 +29,13 @@ hidden_size = 64
 filter_num = 128
 
 #%%
-train_set, test_set = split_data(data = close, input_window = 7, test_len = 60)
-train_set, valid_set = split_data(data = train_set, input_window = 7, test_len = 60)
+train_set, test_set = split_data(data = close, input_window = seq_len, test_len = 60)
+train_set, valid_set = split_data(data = train_set, input_window = seq_len, test_len = 60)
 
-train_set = windowDataset(data = train_set, input_window = 7, output_window = 1, input_size = 1, stride = 1)
-valid_set = windowDataset(data = valid_set, input_window = 7, output_window = 1, input_size = 1, stride = 1)
-test_set = windowDataset(data = test_set, input_window = 7, output_window = 1, input_size = 1, stride = 1)
-close_set = windowDataset(data = close, input_window = 7, output_window = 1, input_size = 1, stride = 1)
+train_set = windowDataset(data = train_set, input_window = seq_len, output_window = 1, input_size = 1, stride = 1)
+valid_set = windowDataset(data = valid_set, input_window = seq_len, output_window = 1, input_size = 1, stride = 1)
+test_set = windowDataset(data = test_set, input_window = seq_len, output_window = 1, input_size = 1, stride = 1)
+close_set = windowDataset(data = close, input_window = seq_len, output_window = 1, input_size = 1, stride = 1)
 
 
 
@@ -86,11 +86,12 @@ valid_loader = DataLoader(valid_set, batch_size = 1, shuffle = False)
 test_loader = DataLoader(test_set, batch_size = 1, shuffle = False)
 
 # %%
-model = TPA_my2(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, filter_num = filter_num)
+model = TPA_my(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, output_size= 1, filter_num = filter_num)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr = 0.001)
 epochs = 100
 train_losses, valid_losses = [], []
+
 
 # %%
 with tqdm(range(1, epochs+1)) as tr:
@@ -121,7 +122,7 @@ with tqdm(range(1, epochs+1)) as tr:
             print(f'best valid loss :{best_valid_loss}')
             break
 # %%
-model = TPA_my2(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, filter_num = filter_num)
+model = TPA_my(seq_len = seq_len, input_size = train_set.x.shape[2], hidden_size = hidden_size, output_size = 1, filter_num = filter_num)
 model.load_state_dict(torch.load('best_TPA.pth'))
 test_predictions, test_labels = eval(model, test_loader)
 test_acc = calculate_accuracy(test_predictions, test_labels)
