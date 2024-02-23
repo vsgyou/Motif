@@ -3,7 +3,6 @@ import yfinance as yf
 import torch.nn as nn
 import torch
 import pandas as pd
-import tensorflow as tf
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import tqdm
