@@ -18,7 +18,7 @@ end_date = '2023-07-30'
 samsung_data = yf.download(stock_code, start = start_date, end = end_date)
 close = samsung_data['Close']
 seq_len = 7    
-k = 50
+k = 5
 
 epochs = 200
 early_stopping_count = 0
@@ -36,8 +36,6 @@ train_set = windowDataset(data = train_set, input_window = seq_len, output_windo
 valid_set = windowDataset(data = valid_set, input_window = seq_len, output_window = 1, input_size = 1, stride = 1)
 test_set = windowDataset(data = test_set, input_window = seq_len, output_window = 1, input_size = 1, stride = 1)
 close_set = windowDataset(data = close, input_window = seq_len, output_window = 1, input_size = 1, stride = 1)
-
-
 
 train_num_samples = train_set.x.shape[0]
 valid_num_samples = valid_set.x.shape[0]
@@ -135,3 +133,6 @@ plt.plot(test_predictions_np,color = 'red', label = "pred")
 plt.plot(test_labels_np, label = "true")
 print(f'test_acc :{test_acc:5f}, test_mse : {test_mse:5f}')
 # %%
+
+
+plt.plot(train_scale.x[1][:,1])
